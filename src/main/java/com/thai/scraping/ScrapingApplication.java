@@ -10,19 +10,23 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 import com.thai.scraping.model.Product;
+import com.thai.scraping.repository.ProductRepository;
 
 @SpringBootApplication
 public class ScrapingApplication implements CommandLineRunner {
 
 	private final String URL = "https://batdongsan.com.vn/nha-dat-ban-dong-anh";
 	private Set<String> visitedUrls = new HashSet<String>();
-
 	private Map<String, Product> products = new HashMap<String, Product>();
+
+	@Autowired
+	ProductRepository productRepository;
 
 	public static void main(String[] args) {
 		SpringApplication.run(ScrapingApplication.class, args);
@@ -31,6 +35,7 @@ public class ScrapingApplication implements CommandLineRunner {
 	@Override
 	public void run(String... args) throws Exception {
 		crawling();
+		productRepository.save(products.values());
 		System.out.println("completed crawling");
 	}
 
