@@ -1,9 +1,9 @@
 package com.thai.scraping;
 
 import java.io.IOException;
-import java.util.HashMap;
+import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.Map;
+import java.util.List;
 import java.util.Set;
 
 import org.jsoup.Jsoup;
@@ -11,22 +11,32 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.thai.scraping.model.Page;
 import com.thai.scraping.model.Product;
+import com.thai.scraping.repository.PageRepository;
 import com.thai.scraping.repository.ProductRepository;
 
 @SpringBootApplication
 public class ScrapingApplication implements CommandLineRunner {
 
-	private final String URL = "https://batdongsan.com.vn/nha-dat-ban-dong-anh";
-	private Set<String> visitedUrls = new HashSet<String>();
-	private Map<String, Product> products = new HashMap<String, Product>();
+	@Value("${crawl.url.home:https://batdongsan.com.vn/nha-dat-ban-dong-anh}")
+	private String URL;
+	private Set<Page> visitedUrls = new HashSet<>();
+	private Set<Page> products = new HashSet<>();
+	private ObjectMapper mapper = new ObjectMapper();
+
+	private long count = 0L;
 
 	@Autowired
 	ProductRepository productRepository;
+	@Autowired
+	PageRepository pageRepository;
 
 	public static void main(String[] args) {
 		SpringApplication.run(ScrapingApplication.class, args);
@@ -35,7 +45,7 @@ public class ScrapingApplication implements CommandLineRunner {
 	@Override
 	public void run(String... args) throws Exception {
 		crawling();
-		productRepository.save(products.values());
+		// productRepository.save(products.values());
 		System.out.println("completed crawling");
 	}
 
@@ -59,6 +69,9 @@ public class ScrapingApplication implements CommandLineRunner {
 		}
 
 		Elements productItems = allProductPage.getElementsByClass("search-productItem");
+		List<Product> pageProduct = new ArrayList<Product>(productItems.size());
+		count = count + productItems.size();
+		System.out.println("current product count: " + count);
 		for (Element productItem : productItems) {
 
 			Element title = productItem.getElementsByClass("p-title").first();
@@ -74,8 +87,24 @@ public class ScrapingApplication implements CommandLineRunner {
 
 			String productCreatedDate = productItem.getElementsByClass("floatright").first().text();
 
-			this.products.put(productUrl, new Product(productTitle, productUrl, shortDescriptionText, productArea,
-					productCityDist, productPrice, productCreatedDate));
+			pageProduct.add(new Product(productTitle, productUrl, shortDescriptionText, productArea, productCityDist,
+					productPrice, productCreatedDate));
+			this.products.add(new Page(productUrl));
+		}
+
+		pageRepository.save(this.products);
+
+		try {
+			productRepository.save(pageProduct);
+		} catch (Exception e) {
+			for (Product a : pageProduct) {
+				try {
+					productRepository.save(a);
+				} catch (Exception e1) {
+					System.out.println(
+							"error in process product" + mapper.writeValueAsString(a) + ", error: " + e1.getMessage());
+				}
+			}
 		}
 
 		Element pagingContent = document.getElementsByClass("background-pager-right-controls").first();
@@ -89,10 +118,10 @@ public class ScrapingApplication implements CommandLineRunner {
 	}
 
 	private boolean visit(String url) {
-		return this.visitedUrls.add(url);
+		return this.visitedUrls.add(new Page(url));
 	}
 
 	private boolean isVisited(String url) {
-		return this.visitedUrls.contains(url);
+		return this.visitedUrls.contains(new Page(url));
 	}
 }
