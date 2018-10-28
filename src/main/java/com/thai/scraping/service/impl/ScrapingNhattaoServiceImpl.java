@@ -22,10 +22,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-@Service(value = "scrapingServiceImpl")
-public class ScrapingServiceImpl implements ScrapingService {
+@Service(value = "scrapingNhattaoServiceImpl")
+public class ScrapingNhattaoServiceImpl implements ScrapingService {
 
-    @Value("${crawl.url.home:https://batdongsan.com.vn/nha-dat-ban-dong-anh}")
+    @Value("${crawl.url.home:https://nhattao.com}")
 
     private String URL;
     private Set<String> visitedUrls = new HashSet<>();
@@ -147,7 +147,8 @@ public class ScrapingServiceImpl implements ScrapingService {
         String productCreatedDate = productItem.getElementsByClass("floatright").first().text();
 
         return new Product(productTitle, productUrl, shortDescriptionText, productArea,
-            productCityDist, productPrice,
+            productCityDist,
+            productPrice,
             productCreatedDate);
     }
 

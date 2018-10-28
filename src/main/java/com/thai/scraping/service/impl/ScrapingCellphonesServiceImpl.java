@@ -9,6 +9,7 @@ import com.thai.scraping.repository.ProductRepository;
 import com.thai.scraping.service.ScrapingService;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -19,15 +20,14 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.util.Assert;
 
-@Service(value = "scrapingServiceImpl")
-public class ScrapingServiceImpl implements ScrapingService {
+@Service(value = "scrapingCellphonesServiceImpl")
+public class ScrapingCellphonesServiceImpl implements ScrapingService {
 
-    @Value("${crawl.url.home:https://batdongsan.com.vn/nha-dat-ban-dong-anh}")
-
-    private String URL;
+    //    @Value("${crawl.url.home:https://cellphones.com.vn/mobile/apple.html}")
+    private String URL = "https://cellphones.com.vn/mobile/apple.html";
     private Set<String> visitedUrls = new HashSet<>();
     private Set<String> productUrls = new HashSet<>();
     private ObjectMapper mapper = new ObjectMapper();
@@ -49,6 +49,8 @@ public class ScrapingServiceImpl implements ScrapingService {
     }
 
     private void queueCrawling(String homeUrl) throws IOException {
+        Assert.notNull(homeUrl, "home url should not be null or empty: " + homeUrl);
+        Assert.isTrue(!homeUrl.isEmpty(), "empty");
         Queue<String> toCrawlPage = new LinkedList<String>();
         toCrawlPage.add(homeUrl);
 
@@ -61,6 +63,10 @@ public class ScrapingServiceImpl implements ScrapingService {
             }
 
             System.out.println("visiting " + item);
+
+            if (item.isEmpty()) {
+                continue;
+            }
 
             Document document = Jsoup.connect(item).get();
             toCrawlPage.addAll(parsePageUrlString(document));
@@ -121,34 +127,33 @@ public class ScrapingServiceImpl implements ScrapingService {
     }
 
     private Elements getAllProductsFromDocument(Document document) {
-        Element allProductPage = document.getElementsByClass("product-list product-list-page stat")
-            .first();
-        if (allProductPage == null) {
+        Elements allProductWithinThePage = document.getElementsByClass("cate-pro-short");
+        if (allProductWithinThePage == null) {
             throw new IllegalStateException(
-                "this document should exists" + "product-list product-list-page stat");
+                "this document should exists" + "cate-pro-short");
         }
 
-        Elements productItems = allProductPage.getElementsByClass("search-productItem");
-        return productItems;
+//        Elements productItems = allProductWithinThePage.getElementsByClass("search-productItem");
+        return allProductWithinThePage;
     }
 
     private Product parseProduct(Element productItem) {
-        Element title = productItem.getElementsByClass("p-title").first();
-        String productTitle = title.text();
-        String productUrl = title.select("a").first().absUrl("href");
+        Elements childs = productItem.children();
 
-        String shortDescriptionText = productItem.getElementsByClass("p-main-text").first().text();
+        Element image = productItem.child(0);
+        Element info = productItem.child(1);
 
-        Elements floatleft = productItem.getElementsByClass("floatleft");
-        String productArea = floatleft.select("span.product-area").first().text();
-        String productCityDist = floatleft.select("span.product-city-dist").first().text();
-        String productPrice = floatleft.select("span.product-price").first().text();
+        String productName = info.child(0).text();
+        String productPrice = info.child(1).text();
 
-        String productCreatedDate = productItem.getElementsByClass("floatright").first().text();
+        Element urlRef = productItem.child(2);
+        String productUrl = urlRef.absUrl("href");
+        String productImageUrl = image.child(0).absUrl("src");
 
-        return new Product(productTitle, productUrl, shortDescriptionText, productArea,
-            productCityDist, productPrice,
-            productCreatedDate);
+        String productTechnicalInfo = urlRef.child(3).text();
+
+        return new Product(productName, productUrl, productTechnicalInfo, "", "", productPrice,
+            new Date().toString());
     }
 
     private void saveProducts(List<Product> pageProduct) throws JsonProcessingException {
@@ -180,12 +185,14 @@ public class ScrapingServiceImpl implements ScrapingService {
     }
 
     private List<String> parsePageUrlString(Document document) throws IOException {
-        Element pagingContent = document.getElementsByClass("background-pager-right-controls")
+        Element pagingContent = document.getElementsByClass("pagination")
             .first();
         Elements pagingLinks = pagingContent.select("a[href]");
+//        Elements pagingLinks = pagingContent.getElementsByClass("cate-pro-short");
         List<String> result = new ArrayList<>();
         for (Element page : pagingLinks) {
             String pageUrl = page.absUrl("href");
+            if(pageUrl.isEmpty()) continue;
             if (!isVisited(pageUrl)) {
                 result.add(pageUrl);
             }

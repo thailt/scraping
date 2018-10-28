@@ -1,9 +1,8 @@
 package com.thai.scraping.repository;
 
-import org.springframework.data.repository.CrudRepository;
-
 import com.thai.scraping.model.Product;
+import org.springframework.data.jpa.repository.JpaRepository;
 
-public interface ProductRepository extends CrudRepository<Product, String> {
+public interface ProductRepository extends JpaRepository<Product, String> {
 
 }

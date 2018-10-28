@@ -4,7 +4,7 @@ import java.io.IOException;
 
 public interface ScrapingService {
 
-	public void crawling() throws IOException;
+    void crawling() throws IOException;
 
-	public void crawling(String url) throws IOException;
+    void crawling(String url) throws IOException;
 }

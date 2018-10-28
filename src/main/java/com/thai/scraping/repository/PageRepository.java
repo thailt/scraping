@@ -1,9 +1,8 @@
 package com.thai.scraping.repository;
 
-import org.springframework.data.repository.CrudRepository;
-
 import com.thai.scraping.model.Page;
+import org.springframework.data.jpa.repository.JpaRepository;
 
-public interface PageRepository extends CrudRepository<Page, String> {
+public interface PageRepository extends JpaRepository<Page, String> {
 
 }
