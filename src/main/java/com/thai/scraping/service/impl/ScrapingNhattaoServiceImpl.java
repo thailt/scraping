@@ -6,14 +6,8 @@ import com.thai.scraping.model.Page;
 import com.thai.scraping.model.Product;
 import com.thai.scraping.repository.PageRepository;
 import com.thai.scraping.repository.ProductRepository;
+import com.thai.scraping.service.PageParserConfiguration;
 import com.thai.scraping.service.ScrapingService;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Queue;
-import java.util.Set;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -22,11 +16,16 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import java.io.IOException;
+import java.util.*;
+
 @Service(value = "scrapingNhattaoServiceImpl")
 public class ScrapingNhattaoServiceImpl implements ScrapingService {
 
-    @Value("${crawl.url.home:https://nhattao.com}")
+    @Autowired
+    PageParserConfiguration pageParserConfiguration;
 
+    @Value("${crawl.url.home:https://nhattao.com/f/iphone.219/}")
     private String URL;
     private Set<String> visitedUrls = new HashSet<>();
     private Set<String> productUrls = new HashSet<>();
@@ -121,14 +120,14 @@ public class ScrapingNhattaoServiceImpl implements ScrapingService {
     }
 
     private Elements getAllProductsFromDocument(Document document) {
-        Element allProductPage = document.getElementsByClass("product-list product-list-page stat")
-            .first();
+        Element allProductPage = document.select(pageParserConfiguration.getBriefProductItemsCSSSelector()).first();
+
         if (allProductPage == null) {
             throw new IllegalStateException(
-                "this document should exists" + "product-list product-list-page stat");
+                    "this document should exists" + pageParserConfiguration.getBriefProductItemsCSSSelector());
         }
 
-        Elements productItems = allProductPage.getElementsByClass("search-productItem");
+        Elements productItems = allProductPage.select(pageParserConfiguration.getBriefProductItemCssQuery());
         return productItems;
     }
 
@@ -147,9 +146,9 @@ public class ScrapingNhattaoServiceImpl implements ScrapingService {
         String productCreatedDate = productItem.getElementsByClass("floatright").first().text();
 
         return new Product(productTitle, productUrl, shortDescriptionText, productArea,
-            productCityDist,
-            productPrice,
-            productCreatedDate);
+                productCityDist,
+                productPrice,
+                productCreatedDate);
     }
 
     private void saveProducts(List<Product> pageProduct) throws JsonProcessingException {
@@ -161,8 +160,8 @@ public class ScrapingNhattaoServiceImpl implements ScrapingService {
                     productRepository.save(a);
                 } catch (Exception e1) {
                     System.out.println(
-                        "error in process product" + mapper.writeValueAsString(a) + ", error: " + e1
-                            .getMessage());
+                            "error in process product" + mapper.writeValueAsString(a) + ", error: " + e1
+                                    .getMessage());
                 }
             }
         }
@@ -170,7 +169,7 @@ public class ScrapingNhattaoServiceImpl implements ScrapingService {
 
     private void parsePageUrls(Document document) throws IOException {
         Element pagingContent = document.getElementsByClass("background-pager-right-controls")
-            .first();
+                .first();
         Elements pagingLinks = pagingContent.select("a[href]");
         for (Element page : pagingLinks) {
             String pageUrl = page.absUrl("href");
@@ -181,9 +180,9 @@ public class ScrapingNhattaoServiceImpl implements ScrapingService {
     }
 
     private List<String> parsePageUrlString(Document document) throws IOException {
-        Element pagingContent = document.getElementsByClass("background-pager-right-controls")
-            .first();
-        Elements pagingLinks = pagingContent.select("a[href]");
+        Element pagingContent = document.getElementsByClass(pageParserConfiguration.getPageNavigation())
+                .first();
+        Elements pagingLinks = pagingContent.select(pageParserConfiguration.getCssHyperlinkSelectorQuery());
         List<String> result = new ArrayList<>();
         for (Element page : pagingLinks) {
             String pageUrl = page.absUrl("href");

@@ -12,7 +12,7 @@ import com.thai.scraping.service.ScrapingService;
 public class ScrapingApplication implements CommandLineRunner {
 
 	@Autowired
-	@Qualifier(value = "scrapingCellphonesServiceImpl")
+	@Qualifier(value = "scrapingNhattaoServiceImpl")
 	ScrapingService scrapingService;
 
 	public static void main(String[] args) {
