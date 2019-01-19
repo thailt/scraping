@@ -14,6 +14,21 @@ public class PageParserConfiguration {
     @Value("${nhattao.pageItems.cssquery}")
     private String briefProductItemsCSSQuery;
 
+    @Value("${nhattao.item.attr.id}")
+    private String attributeForId;
+
+    @Value("${nhattao.item.url.cssquery}")
+    private String produceUrlCssQuery;
+
+    @Value("${nhattao.item.title.cssquery}")
+    private String produceTitleCssQuery;
+
+    @Value("${nhattao.item.price.cssquery}")
+    private String producePriceCssQuery;
+
+    @Value("${nhattao.item.created-date.cssquery}")
+    private String productCreatedDateCssQuery;
+
     public String getBriefProductItemsCSSQuery() {
         return briefProductItemsCSSQuery;
     }
@@ -25,7 +40,7 @@ public class PageParserConfiguration {
     @Value("${nhattao.item.cssquery}")
     private String briefProductItemCssQuery;
 
-    public String getCssHyperlinkSelectorQuery() {
+    public String getCssHyperlinkCSSQuery() {
         return cssHyperlinkSelectorQuery;
     }
 
@@ -35,5 +50,25 @@ public class PageParserConfiguration {
 
     public String getBriefProductItemsCSSSelector() {
         return this.briefProductItemsCSSQuery;
+    }
+
+    public String getAttributeForId() {
+        return attributeForId;
+    }
+
+    public String getProductUrlCssQuery() {
+        return produceUrlCssQuery;
+    }
+
+    public String getProductTitleCssQuery() {
+        return this.produceTitleCssQuery;
+    }
+
+    public String getProductPriceCssQuery() {
+        return this.producePriceCssQuery;
+    }
+
+    public String getCreatedDateCssQuery() {
+        return this.productCreatedDateCssQuery;
     }
 }

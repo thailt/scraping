@@ -12,12 +12,15 @@ public class Product {
 	private String productTitle;
 	@Column(columnDefinition = "TEXT")
 	private String shortDescriptionText;
+	private String fullHtmlText;
 	private String productArea;
 	private String productCityDist;
 	private String productPrice;
 	private String productCreatedDate;
 
-	public Product() {
+	public Product(String productTitle, String productUrl, String shortDescriptionText, String productArea, String productCityDist, String productPrice, String productCreatedDate, String fullHtmlText) {
+	    this(productTitle, productUrl, shortDescriptionText, productArea, productCityDist, productPrice, productCreatedDate);
+	    this.fullHtmlText = fullHtmlText;
 	}
 
 	public Product(String productTitle, String productUrl, String shortDescriptionText, String productArea,
@@ -87,4 +90,13 @@ public class Product {
 	public void setProductCreatedDate(String productCreatedDate) {
 		this.productCreatedDate = productCreatedDate;
 	}
+
+
+    public String getFullHtmlText() {
+        return fullHtmlText;
+    }
+
+    public void setFullHtmlText(String fullHtmlText) {
+        this.fullHtmlText = fullHtmlText;
+    }
 }

@@ -132,23 +132,19 @@ public class ScrapingNhattaoServiceImpl implements ScrapingService {
     }
 
     private Product parseProduct(Element productItem) {
-        Element title = productItem.getElementsByClass("p-title").first();
-        String productTitle = title.text();
-        String productUrl = title.select("a").first().absUrl("href");
+        String productId = productItem.attr(pageParserConfiguration.getAttributeForId());
+        String productUrl = productItem.select(pageParserConfiguration.getProductUrlCssQuery()).first().absUrl("href");
+        String fullHtmlText = productItem.toString();
+        String productTitle = productItem.select(pageParserConfiguration.getProductTitleCssQuery()).first().text();
+        String shortDescriptionText = productItem.select(pageParserConfiguration.getBriefProductItemCssQuery()).first().text();
+        String productPrice = productItem.select(pageParserConfiguration.getProductPriceCssQuery()).first().text();
 
-        String shortDescriptionText = productItem.getElementsByClass("p-main-text").first().text();
+        String productCreatedDate = productItem.select(pageParserConfiguration.getCreatedDateCssQuery()).first().text();
 
-        Elements floatleft = productItem.getElementsByClass("floatleft");
-        String productArea = floatleft.select("span.product-area").first().text();
-        String productCityDist = floatleft.select("span.product-city-dist").first().text();
-        String productPrice = floatleft.select("span.product-price").first().text();
-
-        String productCreatedDate = productItem.getElementsByClass("floatright").first().text();
-
-        return new Product(productTitle, productUrl, shortDescriptionText, productArea,
-                productCityDist,
+        return new Product(productTitle, productUrl, shortDescriptionText, "NA",
+                "NA",
                 productPrice,
-                productCreatedDate);
+                productCreatedDate, fullHtmlText);
     }
 
     private void saveProducts(List<Product> pageProduct) throws JsonProcessingException {
@@ -182,7 +178,7 @@ public class ScrapingNhattaoServiceImpl implements ScrapingService {
     private List<String> parsePageUrlString(Document document) throws IOException {
         Element pagingContent = document.getElementsByClass(pageParserConfiguration.getPageNavigation())
                 .first();
-        Elements pagingLinks = pagingContent.select(pageParserConfiguration.getCssHyperlinkSelectorQuery());
+        Elements pagingLinks = pagingContent.select(pageParserConfiguration.getCssHyperlinkCSSQuery());
         List<String> result = new ArrayList<>();
         for (Element page : pagingLinks) {
             String pageUrl = page.absUrl("href");
