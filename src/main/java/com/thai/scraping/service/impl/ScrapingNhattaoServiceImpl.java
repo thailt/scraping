@@ -8,6 +8,7 @@ import com.thai.scraping.repository.PageRepository;
 import com.thai.scraping.repository.ProductRepository;
 import com.thai.scraping.service.PageParserConfiguration;
 import com.thai.scraping.service.ScrapingService;
+import com.thai.scraping.util.ElementHelper;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -48,7 +49,7 @@ public class ScrapingNhattaoServiceImpl implements ScrapingService {
     }
 
     private void queueCrawling(String homeUrl) throws IOException {
-        Queue<String> toCrawlPage = new LinkedList<String>();
+        Queue<String> toCrawlPage = new LinkedList();
         toCrawlPage.add(homeUrl);
 
         while (toCrawlPage.size() > 0) {
@@ -132,20 +133,21 @@ public class ScrapingNhattaoServiceImpl implements ScrapingService {
     }
 
     private Product parseProduct(Element productItem) {
-        String productId = productItem.attr(pageParserConfiguration.getAttributeForId());
-        String productUrl = productItem.select(pageParserConfiguration.getProductUrlCssQuery()).first().absUrl("href");
+        String productId = ElementHelper.getAttrString(productItem, pageParserConfiguration.getAttributeForId());
+        String productUrl = ElementHelper.getAbsUrlString(productItem, pageParserConfiguration.getProductUrlCssQuery());
         String fullHtmlText = productItem.toString();
-        String productTitle = productItem.select(pageParserConfiguration.getProductTitleCssQuery()).first().text();
-        String shortDescriptionText = productItem.select(pageParserConfiguration.getBriefProductItemCssQuery()).first().text();
-        String productPrice = productItem.select(pageParserConfiguration.getProductPriceCssQuery()).first().text();
+        String productTitle = ElementHelper.getTextString(productItem, pageParserConfiguration.getProductTitleCssQuery());
+        String shortDescriptionText = ElementHelper.getTextString(productItem, pageParserConfiguration.getBriefProductItemCssQuery());
+        String productPrice = ElementHelper.getTextString(productItem, pageParserConfiguration.getProductPriceCssQuery());
 
-        String productCreatedDate = productItem.select(pageParserConfiguration.getCreatedDateCssQuery()).first().text();
+        String productCreatedDate = ElementHelper.getTextString(productItem, pageParserConfiguration.getCreatedDateCssQuery());
 
-        return new Product(productTitle, productUrl, shortDescriptionText, "NA",
-                "NA",
+        return new Product(productId, productTitle, productUrl, shortDescriptionText, ElementHelper.NA,
+                ElementHelper.NA,
                 productPrice,
                 productCreatedDate, fullHtmlText);
     }
+
 
     private void saveProducts(List<Product> pageProduct) throws JsonProcessingException {
         try {
