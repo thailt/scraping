@@ -21,7 +21,7 @@ import java.io.IOException;
 import java.util.*;
 
 @Service(value = "scrapingNhattaoServiceImpl")
-public class ScrapingNhattaoServiceImpl implements ScrapingService {
+public class    ScrapingNhattaoServiceImpl implements ScrapingService {
 
     @Autowired
     PageParserConfiguration pageParserConfiguration;
@@ -124,8 +124,9 @@ public class ScrapingNhattaoServiceImpl implements ScrapingService {
         Element allProductPage = document.select(pageParserConfiguration.getBriefProductItemsCSSSelector()).first();
 
         if (allProductPage == null) {
+            System.out.println(document.data());
             throw new IllegalStateException(
-                    "this document should exists" + pageParserConfiguration.getBriefProductItemsCSSSelector());
+                    "this document should exists: " + pageParserConfiguration.getBriefProductItemsCSSSelector());
         }
 
         Elements productItems = allProductPage.select(pageParserConfiguration.getBriefProductItemCssQuery());
